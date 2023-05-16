@@ -230,34 +230,6 @@ fn set_block_types(mut data: Data) -> Data {
     data
 }
 
-fn attach_context_block_details(data: &Data) -> Data {
-    let data = data.clone();
-    let mut data_blocks = data.blocks.unwrap();
-
-    for index in 0..data_blocks.len() {
-        let mut block = data_blocks[index].clone();
-        if block.block_type != BlockType::Context {
-            continue;
-        }
-
-        let prev_line = &data.lines[block.start as usize - 1];
-        let variable = prev_line.trim_start()["using (var ".len()..]
-            .split("=")
-            .collect::<Vec<&str>>()[0]
-            .trim()
-            .to_string();
-
-        block.details = Some(BlockDetails::ContextBlock { variable });
-        data_blocks[index] = block;
-    }
-
-    Data {
-        lines: data.lines,
-        blocks: Some(data_blocks),
-        class_name: data.class_name,
-    }
-}
-
 fn get_additional_select_blocks(data: &Data) -> Data {
     let data = data.clone();
     let data_blocks = data.blocks.unwrap();
@@ -359,106 +331,6 @@ fn determine_http_method(data: &Data, block: &Block) -> Option<HttpType> {
     }
 
     Some(get_httptype_from_string(current_http_method.unwrap()))
-}
-
-fn attach_method_block_details(data: &Data) -> Data {
-    let new_data = data.clone();
-    let mut data_blocks = new_data.blocks.unwrap();
-
-    for index in 0..data_blocks.len() {
-        let mut block = data_blocks[index].clone();
-        if block.block_type != BlockType::Method {
-            continue;
-        }
-
-        let prev_line = &new_data.lines[block.start as usize - 1]
-            .split(" ")
-            .collect::<Vec<&str>>();
-        let name_index = prev_line.iter().position(|word| word.contains("("));
-
-        if name_index.is_none() {
-            continue;
-        }
-
-        let name_index = name_index.unwrap();
-
-        let end = prev_line[name_index].find("(").unwrap();
-        let function_name = prev_line[name_index][0..end].to_string();
-
-        let mut variables = vec![];
-
-        let mut previous_type = prev_line[name_index][end + 1..].to_string();
-        let mut next_index = name_index + 1;
-
-        while next_index < prev_line.len() {
-            let has_comma = prev_line[next_index].contains(",");
-            let has_end = prev_line[next_index].contains(")");
-
-            if !has_comma && !has_end {
-                previous_type = prev_line[next_index].to_string();
-            } else {
-                variables.push(Variable {
-                    name: prev_line[next_index].replace(",", "").replace(")", ""),
-                    variable_type: previous_type.clone(),
-                });
-            }
-
-            next_index += 1;
-        }
-
-        block.details = Some(BlockDetails::MethodBlock {
-            name: function_name,
-            variables,
-            http_method: determine_http_method(&data, &block),
-            uses_context: data_blocks.iter().any(|b| {
-                b.start > block.start
-                    && b.end.unwrap() < block.end.unwrap()
-                    && b.block_type == BlockType::Context
-            }),
-        });
-
-        data_blocks[index] = block;
-    }
-
-    Data {
-        lines: new_data.lines,
-        blocks: Some(data_blocks),
-        class_name: new_data.class_name,
-    }
-}
-
-fn attach_variable_block_details(data: &Data) -> Data {
-    let data = data.clone();
-    let mut data_blocks = data.blocks.unwrap();
-
-    for index in 0..data_blocks.len() {
-        let mut block = data_blocks[index].clone();
-        if block.block_type != BlockType::Variable {
-            continue;
-        }
-
-        let parts = data.lines[block.start as usize - 1]
-            .trim_start()
-            .split(" ")
-            .collect::<Vec<&str>>();
-
-        let name = parts[1].to_string();
-        let data_type = if parts[2..].contains(&"new") {
-            let correct_data_type = parts[2..].iter().position(|a| *a == "new").unwrap() + 1 + 2;
-            parts[correct_data_type].replace("()", "")
-        } else {
-            parts[0].to_string()
-        };
-
-        block.details = Some(BlockDetails::VariableBlock { name, data_type });
-        data_blocks[index] = block;
-    }
-
-    Data {
-        lines: data.lines,
-        blocks: Some(data_blocks),
-        class_name: data.class_name,
-    }
 }
 
 fn attach_block_details(data: &Data) -> Data {
@@ -834,45 +706,6 @@ fn attach_select_block_details(data: &Data) -> Data {
         lines: final_data.lines,
         blocks: Some(data_blocks),
         class_name: final_data.class_name,
-    }
-}
-
-fn attach_if_block_details(data: &Data) -> Data {
-    let new_data = data.clone();
-    let mut data_blocks = new_data.blocks.unwrap();
-
-    for index in 0..data_blocks.len() {
-        let mut block = data_blocks[index].clone();
-        if block.block_type != BlockType::If {
-            continue;
-        }
-
-        let prev_line = &new_data.lines[block.start as usize - 1].trim_start();
-
-        let first_four_chars = if prev_line.len() >= 4 {
-            &prev_line[0..4]
-        } else {
-            ""
-        };
-
-        let has_else = first_four_chars == "else";
-
-        block.details = Some(BlockDetails::IfBlock {
-            clause: if has_else && !prev_line.contains("if") {
-                "".to_string()
-            } else {
-                let splits = prev_line.trim_start().split("(").collect::<Vec<&str>>();
-                splits[1][0..(splits[1].len() - 1)].to_string()
-            },
-            is_else: has_else,
-        });
-        data_blocks[index] = block;
-    }
-
-    Data {
-        lines: new_data.lines,
-        blocks: Some(data_blocks),
-        class_name: new_data.class_name,
     }
 }
 
