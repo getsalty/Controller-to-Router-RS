@@ -1,8 +1,16 @@
 [package]
-name = "Controller-To-Router-RS"
+name = "controller_to_router_rs"
 version = "0.1.0"
 edition = "2021"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
+dotenv = "0.15.0"
+
+[dev-dependencies]
+criterion = { version = "0.4", features = ["html_reports"] }
+
+[[bench]]
+name = "my_benchmark"
+harness = false

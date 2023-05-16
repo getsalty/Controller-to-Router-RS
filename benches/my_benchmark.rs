@@ -1,28 +1,33 @@
-use dotenv::dotenv;
+use criterion::{criterion_group, criterion_main, Criterion};
 
+#[path = "../src/analyze.rs"]
 mod analyze;
 
-fn main() {
-    dotenv().ok();
+fn criterion_benchmark(c: &mut Criterion) {
+    let mut group = c.benchmark_group("analyze");
 
-    let file_input_name =
-        std::env::var("FILE_INPUT_NAME").expect("Please provide a FILE_INPUT_NAME in .env file");
-
-    let input = std::fs::read_to_string(format!("./input/{}", file_input_name))
+    let input = std::fs::read_to_string("./tests/mocks/input2.cs")
         .expect("Something went wrong reading the file");
 
     let test = input.lines().collect::<Vec<&str>>();
 
-    let mut data = Data {
+    let data = Data {
         lines: test.iter().map(|x| x.to_string()).collect::<Vec<String>>(),
         class_name: None,
         blocks: None,
     };
 
-    data = crate::analyze::analyze_lines(data);
+    group.bench_function("analyze_lines", |b| {
+        b.iter(|| {
+            crate::analyze::analyze_lines(data.clone());
+        })
+    });
 
-    // println!("data.blocks: {:?}", data.blocks);
+    group.finish();
 }
+
+criterion_group!(benches, criterion_benchmark);
+criterion_main!(benches);
 
 #[derive(PartialEq, Clone, Debug)]
 pub enum BlockType {
