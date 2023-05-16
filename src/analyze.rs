@@ -445,7 +445,7 @@ fn attach_block_details(data: &Data) -> Data {
     }
 }
 
-fn sort_and_save_frequency(
+fn get_frequency_and_return_data(
     tables: &Vec<Table>,
     return_data: &Vec<ReturnData>,
 ) -> (Vec<Table>, Vec<ReturnData>) {
@@ -690,7 +690,7 @@ fn attach_select_block_details(data: &Data) -> Data {
             });
         }
 
-        let (tables, return_data) = sort_and_save_frequency(&tables, &return_data);
+        let (tables, return_data) = get_frequency_and_return_data(&tables, &return_data);
 
         data_blocks[index].details = Some(BlockDetails::SelectBlock {
             query_type,
@@ -711,8 +711,6 @@ fn attach_select_block_details(data: &Data) -> Data {
 
 #[cfg(test)]
 mod tests {
-    use std::vec;
-
     use super::analyze_lines;
     use crate::{Block, BlockDetails, BlockType, Data, HttpType, LinqSyntax, QueryType};
 

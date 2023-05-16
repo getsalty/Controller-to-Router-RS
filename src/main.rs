@@ -21,7 +21,7 @@ fn main() {
 
     data = crate::analyze::analyze_lines(data);
 
-    // println!("data.blocks: {:?}", data.blocks);
+    println!("data.blocks: {:?}", data.blocks);
 }
 
 #[derive(PartialEq, Clone, Debug)]

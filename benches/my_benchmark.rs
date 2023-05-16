@@ -1,27 +1,27 @@
 use criterion::{criterion_group, criterion_main, Criterion};
 
-#[path = "../src/analyze.rs"]
-mod analyze;
+// #[path = "../src/analyze.rs"]
+// mod analyze;
 
 fn criterion_benchmark(c: &mut Criterion) {
     let mut group = c.benchmark_group("analyze");
 
-    let input = std::fs::read_to_string("./tests/mocks/input2.cs")
-        .expect("Something went wrong reading the file");
+    // let input = std::fs::read_to_string("./tests/mocks/input2.cs")
+    //     .expect("Something went wrong reading the file");
 
-    let test = input.lines().collect::<Vec<&str>>();
+    // let test = input.lines().collect::<Vec<&str>>();
 
-    let data = Data {
-        lines: test.iter().map(|x| x.to_string()).collect::<Vec<String>>(),
-        class_name: None,
-        blocks: None,
-    };
+    // let data = Data {
+    //     lines: test.iter().map(|x| x.to_string()).collect::<Vec<String>>(),
+    //     class_name: None,
+    //     blocks: None,
+    // };
 
-    group.bench_function("analyze_lines", |b| {
-        b.iter(|| {
-            crate::analyze::analyze_lines(data.clone());
-        })
-    });
+    // group.bench_function("analyze_lines", |b| {
+    //     b.iter(|| {
+    //         crate::analyze::analyze_lines(data.clone());
+    //     })
+    // });
 
     group.finish();
 }
@@ -136,14 +136,3 @@ pub struct WhereClause {
     pub value: String,
     pub lambda_varible: Option<String>,
 }
-
-// pub struct ContextBlock extends Block {
-//     pub start: u32,
-//     pub end: Option<u32>,
-//     pub block_type: BlockType,
-// }
-
-// export type ContextBlock = Block & {
-//     type: "context";
-//     variable: string;
-//   };
